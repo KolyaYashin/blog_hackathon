@@ -1,6 +1,4 @@
 import cv2
-from PIL.Image import Image
-import os
 import pytesseract
 from pytesseract import Output
 import numpy as np
