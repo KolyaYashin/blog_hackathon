@@ -116,10 +116,11 @@ def is_target_word(word, type_platform = "tg"):
     if type_platform == "vk":
         #if equal("подписчики", word):
         #    return True
-        list_target = ["подписчика", "подписчики", "участника", "подписчиков", "участников", "участник", "подписчик", "участники"]
-
-    if type_platform == "tg":
+        list_target = ["подписчика", "подписчики",   "участника", "подписчиков", "участников", "участник", "подписчик", "участники"]
+    elif type_platform == "tg":
         list_target = ["vr", "err"]
+    else:
+        list_target=[]
 
     for target in list_target:
             #if word == target:
@@ -342,8 +343,6 @@ def get_count_subs(path, type_platform = "tg"):
 
     if not(out is None): # Если нашли число
         return out
-
-
 
     else: # Если не нашли
         print("Поиск дальше...")

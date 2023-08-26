@@ -82,16 +82,11 @@ input[type="submit"]:hover {
 </head>
 <body>
     <div class="container">
-        <h1>Выберите платформу:</h1>
+        <h1>Загрузите файл:</h1>
         <form method="POST" enctype="multipart/form-data">
-            <select class="platform" name="platform">
-                <option value="Телеграм">Телеграм</option>
-                <option value="Вк">Вконтакте</option>
-                <option value="Дзен">Яндекс.Дзен</option>
-                <option value="Ютуб">YouTube</option>
-            </select>
             <br><br>
-            <input type="file" name="photo" accept="image/*">
+            <label for="photo">Скриншот:</label>
+            <input id="photo" type="file" name="photo" accept="image/*">
             <br><br>
             <label for="id">Введите ваш ID:</label>
             <input type="text" id="id" name="id">
@@ -103,7 +98,14 @@ input[type="submit"]:hover {
             <h2>Результат обработки:</h2>
             <p>{{result}}</p>
         </div>
+        <h1>Загрузить таблицу с показателями участников:</h1>
         <form action="/upload" method="GET"  enctype="multipart/form-data">
+            <select class="platform" name="platform">
+                <option value="Телеграм">Телеграм</option>
+                <option value="Вк">Вконтакте</option>
+                <option value="Дзен">Яндекс.Дзен</option>
+                <option value="Ютуб">YouTube</option>
+            </select>
             <input type="submit" value="Скачать таблицу">
         </form>
     </div>
