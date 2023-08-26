@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Выберите платформу и загрузите фото</title>
+    <style>
+        /* Стили для основного содержимого */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+h1 {
+    color: #333;
+    text-align: center; /* Выравнивание по центру */
+    padding: 20px 0; /* Добавим немного отступов для красоты */
+}
+
+form {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+select, input[type="file"], input[type="submit"] {
+    display: block;
+    margin-bottom: 10px;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding-right: 0px;
+
+
+}
+
+input[type="submit"] {
+    background-color: #007bff;
+    color: #fff;
+    cursor: pointer;
+}
+
+input[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+/* Стили для блока результата */
+.result-box {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 400px;
+    margin: 20px auto;
+}
+
+.result-box h2 {
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.result-box p {
+    color: #666;
+}
+
+    </style>
+</head>
+<body>
+    <h1>Выберите платформу:</h1>
+    <form action="upload.php" method="POST" enctype="multipart/form-data">
+        <select name="platform">
+            <option value="Телеграм">Телеграм</option>
+            <option value="Вк">Вконтакте</option>
+            <option value="Дзен">Яндекс.Дзен</option>
+            <option value="Ютуб">YouTube</option>
+        </select>
+        <br><br>
+        <input type="file" name="photo" accept="image/*">
+        <br><br>
+        <input type="submit" value="Загрузить">
+    </form>
+
+    <div class="result-box">
+        <h2>Результат обработки:</h2>
+        <p>Здесь будет выводиться результат после обработки фотографии.</p>
+    </div>
+</body>
+</html>
