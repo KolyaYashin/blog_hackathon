@@ -88,9 +88,11 @@ def post():
     platform = photo_class(path)
     global result2show
     result2show = get_count_subs(path,type_platform=platform)
+    if result2show is None:
+        result2show = 'Загрузите другую фотографию'
     if not result2show == 'Загрузите другую фотографию':
         get_file(filename, int(result2show))
-    #os.remove(path)
+    os.remove(path)
     return render_template('index.html', result=result2show)
 
 @app.route('/', methods=['POST'])
