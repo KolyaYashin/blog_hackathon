@@ -5,7 +5,9 @@ from tesseract import get_count_subs
 from csv import writer
 from datetime import datetime
 import pandas as pd
-
+import tensorflow as tf
+from tensorflow import keras
+from keras.models import load_model
 
 app = Flask(__name__)
 
@@ -31,12 +33,13 @@ def get_file(file_name, subs):
         results = pd.read_csv('table.csv')
         row_count = len(results)
         List = [row_count, id, platform, now, subs]
-        # Pass the list as an argument into
-        # the writerow()
         writer_object.writerow(List)
 
-        # Close the file object
         f_object.close()
+
+
+class_model = load_model('saved_model/Model/')
+
 
 
 UPLOAD_FOLDER = 'uploads/'
