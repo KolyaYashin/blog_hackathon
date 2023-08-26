@@ -20,7 +20,9 @@ def platform_convertor(platform):
 
 
 def get_file(file_name, subs):
-    id, platform, name = file_name.split("_")
+    spl=file_name.split("_")
+    id=spl[0]
+    platform=spl[1]
     now = datetime.now()
     with open('table.csv', 'a') as f_object:
         writer_object = writer(f_object)
@@ -52,7 +54,6 @@ def allowed_file(fname:str):
 
 def post():
     platform = platform_convertor(request.form['platform'])
-    print(request.form['platform'])
     id = request.form['id']
     if id=='':
         return render_template('index.html', result = 'Вы не ввели ID')
@@ -67,11 +68,12 @@ def post():
         filename = str(id)+"_"+platform+"_"+secure_filename(file.filename)
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
-    print(path)
+    else:
+        render_template('index.html', result='Плохой формат файла')
     result2show = get_count_subs(path,type_platform=platform)
     if not result2show == 'Загрузите другую фотографию':
         get_file(filename, int(result2show))
-
+    os.remove(path)
     return render_template('index.html', result=result2show)
 
 @app.route('/', methods=['POST'])

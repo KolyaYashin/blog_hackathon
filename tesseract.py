@@ -1,13 +1,10 @@
 import cv2
-from PIL import Image
+from PIL.Image import Image
 import os
 import pytesseract
 from pytesseract import Output
 import numpy as np
 import matplotlib.pyplot as plt
-
-
-
 
 
 def xywh2xyxy(bboxes):
@@ -68,51 +65,139 @@ def calculate_giou(bbox_p, bbox_g):
 def bbox_gious(boxes, box):
     return calculate_giou(box, boxes)
 
+IMAGE_SIZE = 1800
+BINARY_THREHOLD = 180
+
+def remove_noise_and_smooth(img):
+    filtered = cv2.adaptiveThreshold(img.astype(np.uint8), 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 41,3)
+    kernel = np.ones((1, 1), np.uint8)
+    opening = cv2.morphologyEx(filtered, cv2.MORPH_OPEN, kernel)
+    closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
+    img = image_smoothening(img)
+    or_image = cv2.bitwise_or(img, closing)
+    return or_image
+
+
+def image_smoothening(img):
+    ret1, th1 = cv2.threshold(img, BINARY_THREHOLD, 255, cv2.THRESH_BINARY)
+    ret2, th2 = cv2.threshold(th1, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    blur = cv2.GaussianBlur(th2, (1, 1), 0)
+    ret3, th3 = cv2.threshold(blur, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    return th3
 
 def image_preprocess(img, type_platform = "tg"):
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-    if np.max(img.shape) > 2048:
-        k = np.max(img.shape) / 2048
+    #img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    if np.max(img.shape) > 3000:
+        k = np.max(img.shape) / 3000
         img = cv2.resize(img, (int(img.shape[1] / k), int(img.shape[0] / k)))
-    if type_platform == "tg":
-        return cv2.erode(img, (5, 5), 1)
+
+    #img = cv2.erode(img, (7, 7), 1)
+
+    if np.mean(img) < 100:
+        img = (255 - img).astype(np.uint8)
+
+    return remove_noise_and_smooth(img)
 
 
 def equal(word, target):
     if len(word) != len(target):
         return False
-
+    if len(word) < 5:
+        return word == target
     count = 0
     for i in range(len(word)):
         if word[i] == target[i]:
             count += 1
 
-    if abs(count - len(word)) <= 1:
+    if abs(count - len(word)) <= 2:
         return True
-
     return False
+
 
 def is_target_word(word, type_platform = "tg"):
     if type_platform == "vk":
         #if equal("подписчики", word):
         #    return True
-        list_target = ["подписчика", "участника", "подписчиков", "участников", "участник", "подписчик", "участники"]
-
-        for target in list_target:
-            if word == target:
-                return True
+        list_target = ["подписчика", "подписчики", "участника", "подписчиков", "участников", "участник", "подписчик", "участники"]
 
     if type_platform == "tg":
-        list_target = ["подписчики", "подписчиков", "подписчик"]
+        list_target = ["vr", "err"]
+
+    for target in list_target:
+            #if word == target:
+
+            if equal(word, target):
+                return True
 
     return False
 
 
 
+def find_in_line(img, type_platform):
+    del_chars = ["`","/", "$", "@", "!", "©", "‘", "*", "°"]
+    #del_chars = "`°"
 
-def get_word_boxes(img, visualize = False, type_platform = "vk"):
+    lines = pytesseract.image_to_string(img, lang= 'rus').split("\n")
+    #print(lines)
 
-    d = pytesseract.image_to_data(img, output_type=Output.DICT, lang= 'rus')
+    for line in lines:
+        words = line.split()
+        for i, word in enumerate(words):
+            for char in del_chars:
+                #print(char)
+                words[i] = word.replace(char, "")
+            words[i] = words[i].lower()
+
+        for i, word in enumerate(words):
+
+            word = word.lower()
+            if is_target_word(word, type_platform):
+                flag_digit_in_line = False
+                digit = 0
+
+
+                #print("TRUE", words)
+                for p, j in enumerate(range(i-1, -1, -1)):
+                    if is_digit(words[j]):
+                        flag_digit_in_line = True
+                        digit +=  int(words[j]) * 1000**p
+                    else:
+                        break
+
+                if flag_digit_in_line:
+                    return digit
+
+                count = 0
+                for p, j in enumerate(range(i+1, len(words))):
+
+                    if is_digit(words[j]):
+                        count +=1
+                    else:
+                        break
+
+
+                for p, j in enumerate(range(i+1, len(words))):
+
+                    if is_digit(words[j]):
+                        flag_digit_in_line = True
+                        digit += int(words[j]) * 1000**(count - p - 1)
+                    else:
+                        break
+
+                if flag_digit_in_line:
+                    return digit
+
+    return None
+
+
+def get_word_boxes(img, type_platform = "vk", visualize = True):
+
+    del_chars = "`/,\{}:;'$#@!)?(-+°©‘"
+
+    if type_platform == "tg":
+        d = pytesseract.image_to_data(img, output_type=Output.DICT)
+    else:
+        d = pytesseract.image_to_data(img, output_type=Output.DICT, lang= 'rus')
     n_boxes = len(d['level'])
 
     dict_words = {}
@@ -127,13 +212,18 @@ def get_word_boxes(img, visualize = False, type_platform = "vk"):
         #cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
         word = d['text'][i].lower()
+        for char in del_chars:
+            word = word.replace(char, "")
+
+
         dict_words["box"].append([x, y, w, h])
         dict_words["text"].append(word)
-        '''if visualize:
+
+        if visualize:
             cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
-'''
 
         if is_target_word(word, type_platform) and box is None:
+            print(word)
             box = [x, y, w, h]
 
         #if "подписчика" in d['text'][i].lower() and box is None:
@@ -141,7 +231,8 @@ def get_word_boxes(img, visualize = False, type_platform = "vk"):
 
 
 
-
+    if visualize:
+        cv2.imwrite("img_boxes.jpg", img)
 
 
 
@@ -157,11 +248,24 @@ def get_word_boxes(img, visualize = False, type_platform = "vk"):
 def is_digit(word):
     flag = False
     for c in word:
-        if c >= "0" and c <= "9":
+        if c >= "0" and c <= "9" or c == ".":
             flag = True
         else:
             flag = False
             break
+    return flag
+
+def is_metric(word):
+    flag = False
+    if not("%" in word):
+        return flag
+    for c in word[:-1]:
+        if c >= "0" and c <= "9" or c == ".":
+            flag = True
+        else:
+            flag = False
+            break
+
     return flag
 
 def find_digits(dict_words, box, thresh = 0.8, type_platform = "vk"):
@@ -171,26 +275,28 @@ def find_digits(dict_words, box, thresh = 0.8, type_platform = "vk"):
 
     #print(np.round(gious, 1))
 
-    if thresh < 1.0:
-        gious = bbox_gious(np.array(dict_words['box']), np.array([box]))
-        gious = 1 - (gious + 1) / 2
-        sorted_gious = np.sort(gious)
-        sorted_idxs = np.argsort(gious)
-    else:
-        sorted_gious = [0] * len(dict_words['box'])
-        sorted_idxs = list(range(len(sorted_gious)))
+    #if thresh < 1.0:
+    gious = bbox_gious(np.array(dict_words['box']), np.array([box]))
+    gious = 1 - (gious + 1) / 2
+    sorted_gious = np.sort(gious)
+    sorted_idxs = np.argsort(gious)
+    #else:
+    #    sorted_gious = [0] * len(dict_words['box'])
+    #    sorted_idxs = list(range(len(sorted_gious)))
 
     ##print(box)
     #print(np.array(dict_words['text'])[sorted_idxs])
 
     for i, giou in enumerate(sorted_gious):
         word = dict_words['text'][sorted_idxs[i]].lower().strip()
-        print(word, giou)
+        #print(word, giou, dict_words['box'][sorted_idxs[i]])
 
         if giou < thresh:
             if is_digit(word):
                 print("digit box", dict_words['box'][sorted_idxs[i]])
                 return word
+            elif is_metric(word):
+                return word[:-1]
             elif "." in word and ("k" in word or "к" in word):
                 word = float(word[:-1]) * 1000
                 return word # convert_to_normal_digit
@@ -201,15 +307,23 @@ def find_digits(dict_words, box, thresh = 0.8, type_platform = "vk"):
     return None
 
 
-def get_count_subs(path, flag_not_find = False, type_platform = "tg"):
-    img = cv2.imread(path)
-    print(path)
-    img_pil = Image.open(path)
+def get_count_subs(path, type_platform = "tg"):
+    img = cv2.imread(path, 0)
     img = image_preprocess(img, type_platform)
 
+    if type_platform == "vk":
+        out = find_in_line(img, type_platform)
+
+        if  not (out is None):
+            return out
+
+    #print(pytesseract.image_to_string(img))
     #print(pytesseract.image_to_string(img, lang= 'rus'))
 
     dict_words, box = get_word_boxes(img, type_platform)
+    #print(dict_words["text"])
+
+    #print(box)
 
     if box is None:
         return "Загрузите другую фотографию"
@@ -217,6 +331,7 @@ def get_count_subs(path, flag_not_find = False, type_platform = "tg"):
     x, y, w, h = box
     x1, y1, x2, y2 = x, y, x + w, y + h
     box_xyxy = [x1, y1, x2, y2]
+    #print(box_xyxy)
     dict_words["box"] = xywh2xyxy(np.array(dict_words["box"]))
 
 
@@ -235,17 +350,37 @@ def get_count_subs(path, flag_not_find = False, type_platform = "tg"):
     else: # Если не нашли
         print("Поиск дальше...")
         # Детектим все заново
-        #img = cv2.imread(path)
-        #img = image_preprocess(img, type_platform)
+        img = cv2.imread(path, 0)
+        img = image_preprocess(img, type_platform)
+
+        if type_platform == "vk":
+            out = find_in_line(img, type_platform)
+            if not(out is None): # Если нашли число
+                return out
+
         #x, y, w, h = box
-        x1, y1, x2, y2 = 0, y - 5 * h, img.shape[1], y + 5*h
+        x1, y1, x2, y2 = 0, y - 10 * h, img.shape[1], y + 10*h
 
         roi = img[y1:y2, x1:x2]
-        #show_image(roi)
-        #print(pytesseract.image_to_string(roi, lang= 'rus'))
 
-        dict_words, box = get_word_boxes(roi)
+
+        #print(pytesseract.image_to_string(roi, lang= 'rus'))
+        #print(pytesseract.image_to_string(roi))
+
+
+        dict_words, box = get_word_boxes(roi, type_platform)
+
+        x, y, w, h = box
+        x1, y1, x2, y2 = x, y, x + w, y + h
+        box_xyxy = [x1, y1, x2, y2]
+        #print(box_xyxy)
+        dict_words["box"] = xywh2xyxy(np.array(dict_words["box"]))
+
+
+
+
+
         ###print(dict_words)
-        out = find_digits(dict_words, box, thresh = 1.0)
+        out = find_digits(dict_words, box_xyxy, thresh = 1.0)
 
     return out
