@@ -39,12 +39,14 @@ def get_file(file_name, subs):
 
 
 UPLOAD_FOLDER = 'uploads/'
-ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
+ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg','PNG','JPG','JPEG'])
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/')
 def start():
-    return render_template('index.html',result='Здесь будет выводиться результат после обработки фотографии и ID.')
+    global result2show
+    result2show='Здесь будет выводиться результат после обработки фотографии и ID.'
+    return render_template('index.html',result=result2show)
 
 def allowed_file(fname:str):
     if fname.endswith(tuple(ALLOWED_EXTENSIONS)):
@@ -69,7 +71,8 @@ def post():
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
     else:
-        render_template('index.html', result='Плохой формат файла')
+        return render_template('index.html', result='Плохой формат файла')
+    global result2show
     result2show = get_count_subs(path,type_platform=platform)
     if not result2show == 'Загрузите другую фотографию':
         get_file(filename, int(result2show))
@@ -80,6 +83,9 @@ def post():
 def post_home():
     return post()
 
+@app.route('/',methods=['GET'])
+def get():
+    return render_template('index.html',result=result2show)
 
 if __name__=='__main__':
     app.run(host='0.0.0.0',port=5000, debug=True)
