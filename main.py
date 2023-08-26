@@ -1,10 +1,11 @@
-from flask import Flask,request,render_template, redirect
+from flask import Flask,request,render_template, send_file
 from werkzeug.utils import secure_filename
 import os
 from tesseract import get_count_subs
 from csv import writer
 from datetime import datetime
 import pandas as pd
+
 
 app = Flask(__name__)
 
@@ -83,9 +84,15 @@ def post():
 def post_home():
     return post()
 
-@app.route('/',methods=['GET'])
+@app.route('/upload', methods=['GET'])
 def get():
-    return render_template('index.html',result=result2show)
+    print('ok')
+    return send_file(
+        'table.csv',
+        mimetype='text/csv',
+        download_name='table.csv',
+        as_attachment=True
+    )
 
 if __name__=='__main__':
     app.run(host='0.0.0.0',port=5000, debug=True)

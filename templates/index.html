@@ -103,7 +103,7 @@ input[type="submit"]:hover {
             <h2>Результат обработки:</h2>
             <p>{{result}}</p>
         </div>
-        <form method="GET">
+        <form action="/upload" method="GET"  enctype="multipart/form-data">
             <input type="submit" value="Скачать таблицу">
         </form>
     </div>
