@@ -1,5 +1,5 @@
 import cv2
-from PIL.Image import Image
+from PIL import Image
 import os
 import pytesseract
 from pytesseract import Output
@@ -110,7 +110,7 @@ def is_target_word(word, type_platform = "tg"):
 
 
 
-def get_word_boxes(img, visualize = True, type_platform = "vk"):
+def get_word_boxes(img, visualize = False, type_platform = "vk"):
 
     d = pytesseract.image_to_data(img, output_type=Output.DICT, lang= 'rus')
     n_boxes = len(d['level'])
@@ -129,9 +129,9 @@ def get_word_boxes(img, visualize = True, type_platform = "vk"):
         word = d['text'][i].lower()
         dict_words["box"].append([x, y, w, h])
         dict_words["text"].append(word)
-
-        if visualize:
+        '''if visualize:
             cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+'''
 
         if is_target_word(word, type_platform) and box is None:
             box = [x, y, w, h]
@@ -141,9 +141,7 @@ def get_word_boxes(img, visualize = True, type_platform = "vk"):
 
 
 
-    if visualize:
-        #show_image(img)
-        cv2.imwrite("img_boxes.jpg", img)
+
 
 
 
@@ -205,11 +203,13 @@ def find_digits(dict_words, box, thresh = 0.8, type_platform = "vk"):
 
 def get_count_subs(path, flag_not_find = False, type_platform = "tg"):
     img = cv2.imread(path)
+    print(path)
+    img_pil = Image.open(path)
     img = image_preprocess(img, type_platform)
 
     #print(pytesseract.image_to_string(img, lang= 'rus'))
 
-    dict_words, box = get_word_boxes(img, type_platform)
+    dict_words, box = get_word_boxes(img_pil, type_platform)
 
     if box is None:
         return "Загрузите, пожалуйста, нормальную фотографию!!!!"
@@ -240,7 +240,7 @@ def get_count_subs(path, flag_not_find = False, type_platform = "tg"):
         #x, y, w, h = box
         x1, y1, x2, y2 = 0, y - 5 * h, img.shape[1], y + 5*h
 
-        roi = img[y1:y2, x1:x2]
+        roi = img_pil[y1:y2, x1:x2]
         #show_image(roi)
         #print(pytesseract.image_to_string(roi, lang= 'rus'))
 
