@@ -18,6 +18,7 @@ def platform_convertor(platform):
     else:
         return 'zn'
 
+
 def get_file(file_name, subs):
     id, platform, name = file_name.split("_")
     now = datetime.now()
@@ -68,6 +69,9 @@ def post():
         file.save(path)
     print(path)
     result2show = get_count_subs(path,type_platform=platform)
+    if not result2show == 'Загрузите другую фотографию':
+        get_file(filename, int(result2show))
+
     return render_template('index.html', result=result2show)
 
 @app.route('/', methods=['POST'])

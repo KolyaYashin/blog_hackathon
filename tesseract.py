@@ -209,10 +209,10 @@ def get_count_subs(path, flag_not_find = False, type_platform = "tg"):
 
     #print(pytesseract.image_to_string(img, lang= 'rus'))
 
-    dict_words, box = get_word_boxes(img_pil, type_platform)
+    dict_words, box = get_word_boxes(img, type_platform)
 
     if box is None:
-        return "Загрузите, пожалуйста, нормальную фотографию!!!!"
+        return "Загрузите другую фотографию"
 
     x, y, w, h = box
     x1, y1, x2, y2 = x, y, x + w, y + h
@@ -240,7 +240,7 @@ def get_count_subs(path, flag_not_find = False, type_platform = "tg"):
         #x, y, w, h = box
         x1, y1, x2, y2 = 0, y - 5 * h, img.shape[1], y + 5*h
 
-        roi = img_pil[y1:y2, x1:x2]
+        roi = img[y1:y2, x1:x2]
         #show_image(roi)
         #print(pytesseract.image_to_string(roi, lang= 'rus'))
 
