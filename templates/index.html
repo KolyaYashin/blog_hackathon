@@ -3,90 +3,106 @@
 <head>
     <title>Выберите платформу и загрузите фото</title>
     <style>
-        /* Стили для основного содержимого */
-body {
-    font-family: Arial, sans-serif;
-    margin: 0;
+        /* Добавьте это в файл styles.css */
+
+/* Стили для контейнера */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
     padding: 20px;
-    background-color: #f5f5f5;
+    background-color: #191919;
+    color: #00ff88;
+    font-family: 'Courier New', monospace;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
 }
 
+/* Стили для заголовка */
 h1 {
-    color: #333;
-    text-align: center; /* Выравнивание по центру */
-    padding: 20px 0; /* Добавим немного отступов для красоты */
+    color: #00ff88;
+    text-align: center;
+    font-size: 24px;
+    margin-bottom: 20px;
 }
 
+/* Стили для формы */
 form {
-    background-color: #fff;
+    background-color: #000;
     padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    max-width: 400px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
     margin: 0 auto;
 }
 
-select, input[type="file"], input[type="submit"] {
+/* Стили для полей ввода */
+select, input[type="file"], input[type="text"], input[type="submit"] {
     display: block;
     margin-bottom: 10px;
     width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+    background-color: #333;
+    border: none;
+    color: #00ff88;
+    font-family: 'Courier New', monospace;
     padding-right: 0px;
 
 
 }
 
+/* Стили для кнопки */
 input[type="submit"] {
-    background-color: #007bff;
-    color: #fff;
+    background-color: #00ff88;
+    color: #000;
     cursor: pointer;
+    transition: background-color 0.3s ease-in-out;
 }
 
 input[type="submit"]:hover {
-    background-color: #0056b3;
+    background-color: #007a55;
 }
 
 /* Стили для блока результата */
 .result-box {
-    background-color: #fff;
+    background-color: #000;
     padding: 20px;
-    border-radius: 5px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    max-width: 400px;
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
     margin: 20px auto;
 }
 
 .result-box h2 {
-    color: #333;
+    color: #00ff88;
     margin-bottom: 10px;
 }
 
 .result-box p {
-    color: #666;
+    color: #ddd;
 }
 
     </style>
 </head>
 <body>
-    <h1>Выберите платформу:</h1>
-    <form action="upload.php" method="POST" enctype="multipart/form-data">
-        <select name="platform">
-            <option value="Телеграм">Телеграм</option>
-            <option value="Вк">Вконтакте</option>
-            <option value="Дзен">Яндекс.Дзен</option>
-            <option value="Ютуб">YouTube</option>
-        </select>
-        <br><br>
-        <input type="file" name="photo" accept="image/*">
-        <br><br>
-        <input type="submit" value="Загрузить">
-    </form>
+    <div class="container">
+        <h1>Выберите платформу:</h1>
+        <form action="upload.php" method="POST" enctype="multipart/form-data">
+            <select name="platform">
+                <option value="Телеграм">Телеграм</option>
+                <option value="Вк">Вконтакте</option>
+                <option value="Дзен">Яндекс.Дзен</option>
+                <option value="Ютуб">YouTube</option>
+            </select>
+            <br><br>
+            <input type="file" name="photo" accept="image/*">
+            <br><br>
+            <label for="id">Введите ваш ID:</label>
+            <input type="text" id="id" name="id">
+            <br><br>
+            <input type="submit" value="Загрузить">
+        </form>
 
-    <div class="result-box">
-        <h2>Результат обработки:</h2>
-        <p>Здесь будет выводиться результат после обработки фотографии.</p>
+        <div class="result-box">
+            <h2>Результат обработки:</h2>
+            <p>Здесь будет выводиться результат после обработки фотографии и ID.</p>
+        </div>
     </div>
 </body>
 </html>
