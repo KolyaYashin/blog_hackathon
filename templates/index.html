@@ -83,8 +83,8 @@ input[type="submit"]:hover {
 <body>
     <div class="container">
         <h1>Выберите платформу:</h1>
-        <form action="upload.php" method="POST" enctype="multipart/form-data">
-            <select name="platform">
+        <form method="POST" enctype="multipart/form-data">
+            <select class="platform" name="platform">
                 <option value="Телеграм">Телеграм</option>
                 <option value="Вк">Вконтакте</option>
                 <option value="Дзен">Яндекс.Дзен</option>
@@ -101,7 +101,7 @@ input[type="submit"]:hover {
 
         <div class="result-box">
             <h2>Результат обработки:</h2>
-            <p>Здесь будет выводиться результат после обработки фотографии и ID.</p>
+            <p>{{result}}</p>
         </div>
     </div>
 </body>
