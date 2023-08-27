@@ -160,6 +160,7 @@ def is_target_word(word, type_platform = "tg"):
     if type_platform == "zn":
         list_target = ["дочитывания"]
 
+    list_target = []
     for target in list_target:
             #if word == target:
 
