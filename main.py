@@ -10,21 +10,9 @@ from tensorflow import keras
 from keras.models import load_model
 import numpy as np
 import cv2
-import docx2txt as d2t
-import aspose.slides as slides
-import aspose.pydrawing as drawing
-
 
 def check_extension(filename, folder=''): #Проверяем расширение файла
-    if filename.endswith('.pptx'):
-        with slides.Presentation(filename) as pres:
-            for image in pres.images:
-                image_type = image.content_type.split("/")[1]
-                image.system_image.save(filename + '.' + image_type)
-        os.remove(filename)
-    elif filename.endswith('.docx'):
-        text=d2t.process(filename, folder) #Извлекаем изображение из файла - теперь в формате .png
-        os.remove(filename) #Не забываем удалять изначальный файл из папки
+    pass
 
 
 app = Flask(__name__)
