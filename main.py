@@ -24,14 +24,14 @@ def platform_convertor(platform):
         return 'zn'
 
 
-def get_file(file_name, subs):
+def get_file(file_name, subs, platform):
     spl=file_name.split("_")
     id=spl[0]
     now = datetime.now()
-    with open('table.csv', 'a') as f_object:
+    with open(f'table_{platform}.csv', 'a') as f_object:
         writer_object = writer(f_object)
 
-        results = pd.read_csv('table.csv')
+        results = pd.read_csv(f'table_{platform}.csv')
         row_count = len(results)
         List = [row_count, id, now, subs]
         writer_object.writerow(List)
@@ -91,7 +91,7 @@ def post():
     if result2show is None:
         result2show = 'Загрузите другую фотографию'
     if not result2show == 'Загрузите другую фотографию':
-        get_file(filename, int(result2show))
+        get_file(filename, int(result2show),platform=platform)
     os.remove(path)
     return render_template('index.html', result=result2show)
 
@@ -101,11 +101,12 @@ def post_home():
 
 @app.route('/upload', methods=['GET'])
 def get():
-    print('ok')
+    platform = platform_convertor(request.url.split('=')[-1])
+
     return send_file(
-        'table.csv',
+        f'table_{platform}.csv',
         mimetype='text/csv',
-        download_name='table.csv',
+        download_name=f'table_{platform}.csv',
         as_attachment=True
     )
 
