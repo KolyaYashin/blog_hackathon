@@ -139,6 +139,7 @@ def equal(word, target):
     return False
 
 def is_target_word(word, type_platform = "tg"):
+    list_target = []
     if type_platform == "vk":
         #if equal("подписчики", word):
         #    return True
@@ -160,7 +161,7 @@ def is_target_word(word, type_platform = "tg"):
     if type_platform == "zn":
         list_target = ["дочитывания"]
 
-    list_target = []
+    #list_target = []
     for target in list_target:
             #if word == target:
 

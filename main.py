@@ -90,13 +90,12 @@ def post():
         filename = str(id)+"_"+secure_filename(file.filename)
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
-        check_extension(filename=filename,folder=app.config['UPLOAD_FOLDER'])
+        #check_extension(filename=filename,folder=app.config['UPLOAD_FOLDER'])
     else:
         return render_template('index.html', result='Плохой формат файла')
 
     platform = photo_class(path)
     global result2show
-
     result2show = get_count_subs(path,type_platform=platform)
     if result2show is None:
         result2show = 'Загрузите другую фотографию'
