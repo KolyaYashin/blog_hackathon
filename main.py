@@ -10,6 +10,22 @@ from tensorflow import keras
 from keras.models import load_model
 import numpy as np
 import cv2
+import docx2txt as d2t
+import aspose.slides as slides
+import aspose.pydrawing as drawing
+
+
+def check_extension(filename, folder=''): #Проверяем расширение файла
+    if filename.endswith('.pptx'):
+        with slides.Presentation(filename) as pres:
+            for image in pres.images:
+                image_type = image.content_type.split("/")[1]
+                image.system_image.save(filename + '.' + image_type)
+        os.remove(filename)
+    elif filename.endswith('.docx'):
+        text=d2t.process(filename, folder) #Извлекаем изображение из файла - теперь в формате .png
+        os.remove(filename) #Не забываем удалять изначальный файл из папки
+
 
 app = Flask(__name__)
 
@@ -66,6 +82,11 @@ def allowed_file(fname:str):
     else:
         return 0
 
+
+
+
+
+#main function
 def post():
     id = request.form['id']
     if id=='':
@@ -81,17 +102,18 @@ def post():
         filename = str(id)+"_"+secure_filename(file.filename)
         path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(path)
+        check_extension(filename=filename,folder=app.config['UPLOAD_FOLDER'])
     else:
         return render_template('index.html', result='Плохой формат файла')
 
-
     platform = photo_class(path)
     global result2show
+
     result2show = get_count_subs(path,type_platform=platform)
     if result2show is None:
         result2show = 'Загрузите другую фотографию'
     if not result2show == 'Загрузите другую фотографию':
-        get_file(filename, int(result2show),platform=platform)
+        get_file(filename, int(float(result2show)),platform=platform)
     os.remove(path)
     return render_template('index.html', result=result2show)
 

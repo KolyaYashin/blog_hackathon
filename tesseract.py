@@ -1,8 +1,11 @@
 import cv2
+from PIL.Image import Image
+import os
 import pytesseract
 from pytesseract import Output
 import numpy as np
 import matplotlib.pyplot as plt
+
 
 
 def xywh2xyxy(bboxes):
@@ -64,10 +67,11 @@ def bbox_gious(boxes, box):
     return calculate_giou(box, boxes)
 
 IMAGE_SIZE = 1800
-BINARY_THREHOLD = 180
+
 
 def remove_noise_and_smooth(img):
-    filtered = cv2.adaptiveThreshold(img.astype(np.uint8), 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 41,3)
+    filtered = cv2.adaptiveThreshold(img.astype(np.uint8), 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 41,
+                                    3)
     kernel = np.ones((1, 1), np.uint8)
     opening = cv2.morphologyEx(filtered, cv2.MORPH_OPEN, kernel)
     closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel)
@@ -89,19 +93,41 @@ def image_preprocess(img, type_platform = "tg"):
         k = np.max(img.shape) / 3000
         img = cv2.resize(img, (int(img.shape[1] / k), int(img.shape[0] / k)))
 
-    #img = cv2.erode(img, (7, 7), 1)
+    skip = False
+    global BINARY_THREHOLD
+    if "vk" in type_platform:
+        BINARY_THREHOLD = 180
+    elif type_platform == "tg":
+        BINARY_THREHOLD = 160
+    elif type_platform == "zn":
+        BINARY_THREHOLD = 170
+        #skip = True
+        img = cv2.bilateralFilter(img,9,75,75)
+        _, img = cv2.threshold(img, 228, 255, cv2.THRESH_BINARY)
+        return img
+    elif "yt" in type_platform:
+        BINARY_THREHOLD = 180
+
+    #img = cv2.dilate(img, (7, 7), 1)
 
     if np.mean(img) < 100:
         img = (255 - img).astype(np.uint8)
 
-    return remove_noise_and_smooth(img)
+    img = remove_noise_and_smooth(img)
+    #img =  cv2.erode(img, (7, 7), 3)
 
+    return img
 
 def equal(word, target):
     if len(word) != len(target):
         return False
     if len(word) < 5:
         return word == target
+
+
+
+
+
     count = 0
     for i in range(len(word)):
         if word[i] == target[i]:
@@ -109,18 +135,30 @@ def equal(word, target):
 
     if abs(count - len(word)) <= 2:
         return True
-    return False
 
+    return False
 
 def is_target_word(word, type_platform = "tg"):
     if type_platform == "vk":
         #if equal("подписчики", word):
         #    return True
-        list_target = ["подписчика", "подписчики",   "участника", "подписчиков", "участников", "участник", "подписчик", "участники"]
-    elif type_platform == "tg":
+        list_target = ["подписчика", "подписчики", "участника", "подписчиков", "участников", "участник", "подписчик", "участники"]
+        #list_target = ["подписчика", "подписчики", "подписчиков", "подписчик"]
+
+    if type_platform == "vk_friend":
+        list_target = ["друзья", "друзей"]
+
+    if type_platform == "tg":
         list_target = ["vr", "err"]
-    else:
-        list_target=[]
+
+    if type_platform == "yt1":
+        list_target = ["подписчики", "подписчиков", "подписчики", "подписчика"]
+
+    if type_platform == "yt2":
+        list_target = ["просмотров", "просмотры"]
+
+    if type_platform == "zn":
+        list_target = ["дочитывания"]
 
     for target in list_target:
             #if word == target:
@@ -189,7 +227,7 @@ def find_in_line(img, type_platform):
     return None
 
 
-def get_word_boxes(img, type_platform = "vk", visualize = True):
+def get_word_boxes(img, type_platform = "vk", visualize = False):
 
     del_chars = "`/,\{}:;'$#@!)?(-+°©‘"
 
@@ -246,6 +284,9 @@ def get_word_boxes(img, type_platform = "vk", visualize = True):
 
 def is_digit(word):
     flag = False
+    if word == ".":
+        return flag
+
     for c in word:
         if c >= "0" and c <= "9" or c == ".":
             flag = True
@@ -258,6 +299,8 @@ def is_metric(word):
     flag = False
     if not("%" in word):
         return flag
+
+
     for c in word[:-1]:
         if c >= "0" and c <= "9" or c == ".":
             flag = True
@@ -296,7 +339,7 @@ def find_digits(dict_words, box, thresh = 0.8, type_platform = "vk"):
                 return word
             elif is_metric(word):
                 return word[:-1]
-            elif "." in word and ("k" in word or "к" in word):
+            elif "." in word and ("k" in word or "к" in word) and is_digit(word.replace("к", "")):
                 word = float(word[:-1]) * 1000
                 return word # convert_to_normal_digit
             elif "к" in word and is_digit(word[:-1]):
@@ -304,6 +347,21 @@ def find_digits(dict_words, box, thresh = 0.8, type_platform = "vk"):
 
 
     return None
+
+def get_vk_friend(img):
+    dict_words, box = get_word_boxes(img, "vk_friend", False)
+    if box is None:
+        return 0
+    x, y, w, h = box
+    x1, y1, x2, y2 = x, y, x + w, y + h
+    box_xyxy = [x1, y1, x2, y2]
+    #print(box_xyxy)
+    dict_words["box"] = xywh2xyxy(np.array(dict_words["box"]))
+
+
+
+
+    out = find_digits(dict_words, box_xyxy)
 
 
 def get_count_subs(path, type_platform = "tg"):
@@ -316,8 +374,25 @@ def get_count_subs(path, type_platform = "tg"):
         if  not (out is None):
             return out
 
+
+    if type_platform == "zn":
+        dict_words, box = get_word_boxes(img, type_platform, False)
+        #print(box)
+        count = 0
+        for word in dict_words["text"]:
+            if is_target_word(word, type_platform):
+                count += 1
+        print("count", count)
+        if count > 1:
+            x, y, w, h = box
+            img[y:y+h, x:x+w] = 255
+
+
+
     #print(pytesseract.image_to_string(img))
     #print(pytesseract.image_to_string(img, lang= 'rus'))
+
+
 
     dict_words, box = get_word_boxes(img, type_platform)
     #print(dict_words["text"])
@@ -342,13 +417,19 @@ def get_count_subs(path, type_platform = "tg"):
 
 
     if not(out is None): # Если нашли число
+
         return out
+
+
 
     else: # Если не нашли
         print("Поиск дальше...")
         # Детектим все заново
         img = cv2.imread(path, 0)
-        img = image_preprocess(img, type_platform)
+        if type_platform == "zn":
+            img = image_preprocess(img, "")
+        else:
+            img = image_preprocess(img, type_platform)
 
         if type_platform == "vk":
             out = find_in_line(img, type_platform)
@@ -356,7 +437,13 @@ def get_count_subs(path, type_platform = "tg"):
                 return out
 
         #x, y, w, h = box
-        x1, y1, x2, y2 = 0, y - 10 * h, img.shape[1], y + 10*h
+        if type_platform == "zn":
+            k1, k2 = 0,  20
+        elif type_platform == "tg":
+            k1, k2 = 10,  15
+        else:
+            k1 = k2 = 10
+        x1, y1, x2, y2 = 0, max(0, y - k1 * h), img.shape[1] - 1, min(y + k2*h, img.shape[0] - 1)
 
         roi = img[y1:y2, x1:x2]
 
@@ -364,8 +451,9 @@ def get_count_subs(path, type_platform = "tg"):
         #print(pytesseract.image_to_string(roi, lang= 'rus'))
         #print(pytesseract.image_to_string(roi))
 
-
-        dict_words, box = get_word_boxes(roi, type_platform)
+        box = x, y - y1, w, h
+        dict_words, _ = get_word_boxes(roi, type_platform)
+        #print(dict_words)
 
         x, y, w, h = box
         x1, y1, x2, y2 = x, y, x + w, y + h
@@ -379,5 +467,7 @@ def get_count_subs(path, type_platform = "tg"):
 
         ###print(dict_words)
         out = find_digits(dict_words, box_xyxy, thresh = 1.0)
+
+
 
     return out
