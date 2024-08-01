@@ -1,7 +1,4 @@
 Flask==2.3.2
-keras==2.13.1
-matplotlib==3.7.2
 pandas==1.5.3
 pytesseract==0.3.10
-tensorflow==2.13.0
 Werkzeug==2.3.6

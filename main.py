@@ -5,8 +5,6 @@ from tesseract import get_count_subs
 from csv import writer
 from datetime import datetime
 import pandas as pd
-import tensorflow as tf
-from tensorflow import keras
 from keras.models import load_model
 import numpy as np
 import cv2
